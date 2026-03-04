@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local
+
+# ChromaDB vector store
+data/chroma_db/
+
+# Raw data (large — download via scripts)
+data/raw/
+
+# HF Dataset cache (arrow files)
+data/preference_data/hf_dataset/
+
+# Model weights (large .safetensors files)
+models/sft_adapter/*.safetensors
+models/dpo_adapter/*.safetensors
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Weights & Biases
+wandb/
+
+# Archives
+*.zip
+
+# Large binary files
+*.mp4
+*.mp3
+*.avi
+*.mov
+
+# Unrelated files
+notebooks/CAPEX_vs_OPEX_Illustration_SPV_Members.docx
+
+# Results — large training artifacts
+results/sft_output/
+results/sft_adapter/*.safetensors
+results/=*
+results/__huggingface_repos__.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
