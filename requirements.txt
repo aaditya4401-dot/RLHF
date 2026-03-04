@@ -1,0 +1,43 @@
+# === Local Machine (RAG + Preference Collection) ===
+
+# RAG Framework
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langchain-community>=0.0.10
+
+# Teacher Model
+openai>=1.12.0
+
+# Text splitting
+langchain-text-splitters>=0.0.1
+
+# Vector Store
+chromadb>=0.4.0
+faiss-cpu>=1.7.0
+
+# PDF support (optional, for loading PDFs into RAG)
+pypdf>=3.17.0
+
+# Embeddings
+sentence-transformers>=2.2.0
+
+# Dataset handling
+datasets>=2.16.0
+
+# Evaluation
+rouge-score>=0.1.2
+
+# Utilities
+python-dotenv>=1.0.0
+tqdm>=4.66.0
+
+# === Kaggle Notebooks (Training) ===
+# Install these in Kaggle, not locally:
+#
+# transformers>=4.36.0
+# trl>=0.7.0
+# peft>=0.7.0
+# bitsandbytes>=0.41.0
+# accelerate>=0.25.0
+# wandb>=0.16.0
+# torch>=2.1.0

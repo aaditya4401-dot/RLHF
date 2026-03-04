@@ -1,0 +1,4 @@
+model,rouge_l_mean,rouge_l_median,rouge_l_std,status,word_count_max,word_count_mean,word_count_median,word_count_min,word_count_std
+Base Mistral 7B,0.1945290804046464,0.18097837497375602,0.05012307221714204,,254,196.25,219.5,72,48.51070739944292
+After LoRA SFT,0.46783025245508864,0.43985815602836875,0.18589038944387792,,226,132.34722222222223,142.5,34,53.04931527673287
+After DPO,,,,not in results,,,,,

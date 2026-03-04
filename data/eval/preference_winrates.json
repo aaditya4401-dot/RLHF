@@ -1,0 +1,13 @@
+[
+  {
+    "comparison": "Base vs SFT",
+    "model_a": "Base",
+    "model_b": "SFT",
+    "Base_wins": 54,
+    "SFT_wins": 17,
+    "errors": 1,
+    "total_judged": 71,
+    "Base_win_rate": 76.1,
+    "SFT_win_rate": 23.9
+  }
+]
