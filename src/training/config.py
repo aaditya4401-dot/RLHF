@@ -38,17 +38,23 @@ SFT_OUTPUT_DIR = "./sft_output"
 SFT_ADAPTER_DIR = "./models/sft_adapter"
 
 # ── DPO Training ───────────────────────────────────────────────────────
-DPO_BETA = 0.1
-DPO_EPOCHS = 2
+# Key settings to avoid mode collapse:
+#   - Merge SFT adapter into base before DPO (see notebook)
+#   - Use a fresh LoRA for DPO training
+#   - beta=0.3 balances alignment signal vs. KL penalty
+#   - 1 epoch on small datasets prevents overfitting
+#   - LR=5e-6 is appropriate for a fresh LoRA (higher than fine-tuning existing)
+DPO_BETA = 0.3
+DPO_EPOCHS = 1
 DPO_BATCH_SIZE = 4
 DPO_GRADIENT_ACCUMULATION_STEPS = 4
-DPO_LEARNING_RATE = 5e-7
+DPO_LEARNING_RATE = 5e-6
 DPO_MAX_LENGTH = 1024
 DPO_MAX_PROMPT_LENGTH = 512
-DPO_WARMUP_RATIO = 0.1
+DPO_WARMUP_STEPS = 50  # warmup_ratio is deprecated in newer TRL
 DPO_LR_SCHEDULER = "cosine"
 DPO_WEIGHT_DECAY = 0.01
-DPO_LOGGING_STEPS = 25
+DPO_LOGGING_STEPS = 10
 DPO_SAVE_STEPS = 500
 DPO_FP16 = True
 DPO_GRADIENT_CHECKPOINTING = True
