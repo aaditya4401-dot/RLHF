@@ -19,6 +19,7 @@ MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 # --- Sample queries for testing the pipeline end-to-end ---
 
 SAMPLE_QUERIES = [
+    # --- Original 20 ---
     "What is the company's policy on remote work?",
     "How do I apply for parental leave?",
     "What expenses are reimbursable during business travel?",
@@ -39,6 +40,46 @@ SAMPLE_QUERIES = [
     "How do I report a safety hazard in the workplace?",
     "What is the process for an internal job transfer or promotion?",
     "What are the guidelines for using company equipment for personal use?",
+    # --- Added queries: Benefits & Compensation ---
+    "How does the employee stock option or equity program work?",
+    "What dental and vision insurance plans are offered?",
+    "How do I enroll in or change my benefits during open enrollment?",
+    "What is the company match percentage for the retirement plan?",
+    "Are there any employee discount programs or perks?",
+    "How does the tuition reimbursement program work?",
+    "What life insurance and disability coverage does the company provide?",
+    "How is the annual bonus or incentive compensation calculated?",
+    # --- Added queries: Leave & Time Off ---
+    "What is the bereavement leave policy?",
+    "How do I request a leave of absence for medical reasons (FMLA)?",
+    "What is the policy on jury duty leave?",
+    "Can I take unpaid leave and what is the approval process?",
+    "How does the sabbatical or extended leave program work?",
+    "What is the policy on mental health days or wellness leave?",
+    "How do I request time off for volunteering or community service?",
+    # --- Added queries: Workplace Policies ---
+    "What is the company's anti-discrimination and equal opportunity policy?",
+    "How does the grievance or dispute resolution process work?",
+    "What is the policy on moonlighting or outside employment?",
+    "What are the rules around workplace relationships and dating policies?",
+    "How does the company handle substance abuse or drug testing?",
+    "What is the social media policy for employees?",
+    "What are the data privacy and personal information handling policies?",
+    "What is the policy on working from a different state or country?",
+    # --- Added queries: Career & Development ---
+    "How does the mentorship or buddy program work for new hires?",
+    "What is the process for requesting a salary review or raise?",
+    "How are job levels and career ladders structured?",
+    "What leadership development or management training is available?",
+    "How do I apply for an international assignment or relocation?",
+    # --- Added queries: Operations & Compliance ---
+    "What is the policy on visitor access and guest badges?",
+    "How do I request ergonomic equipment or a standing desk?",
+    "What is the emergency evacuation procedure for the office?",
+    "How does the company handle whistleblower protections?",
+    "What are the rules for expensing home office equipment?",
+    "What is the company's policy on background checks for new hires?",
+    "How do I access the employee assistance program (EAP)?",
 ]
 
 # --- System prompt variations for diversity ---

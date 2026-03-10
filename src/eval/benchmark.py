@@ -126,16 +126,41 @@ def run_benchmark(
         sft_responses = ["[SFT adapter not available]"] * len(prompts)
 
     # Load DPO adapter and generate
-    # DPO adapter may stack on SFT, so we reload base and apply DPO adapter
-    dpo_model = load_adapter_model(base_model, dpo_adapter_dir, "DPO")
+    # The DPO adapter was trained on SFT-merged weights (not raw base).
+    # We must merge the SFT adapter into the base first, then load the DPO adapter.
+    dpo_adapter_path = Path(dpo_adapter_dir)
+    sft_adapter_path = Path(sft_adapter_dir)
     dpo_responses = []
-    if dpo_model is not None:
-        print("\n--- Generating DPO model responses ---")
-        for prompt in tqdm(prompts, desc="DPO"):
-            dpo_responses.append(generate_response(dpo_model, tokenizer, prompt))
-        del dpo_model
-        torch.cuda.empty_cache()
+
+    if dpo_adapter_path.exists():
+        print("\n--- Preparing DPO model (merge SFT + load DPO adapter) ---")
+
+        if sft_adapter_path.exists():
+            # Reload base for DPO (the previous sft_model may have been deleted)
+            dpo_base, _ = load_base_model()
+            sft_for_merge = PeftModel.from_pretrained(dpo_base, sft_adapter_dir)
+            merged_model = sft_for_merge.merge_and_unload()
+            del sft_for_merge
+            torch.cuda.empty_cache()
+
+            # Now load DPO adapter on top of merged SFT model
+            dpo_model = PeftModel.from_pretrained(merged_model, dpo_adapter_dir)
+            dpo_model.eval()
+        else:
+            # No SFT adapter — try loading DPO directly on base (may not work correctly)
+            print("  WARNING: SFT adapter not found, loading DPO on raw base")
+            dpo_model = load_adapter_model(base_model, dpo_adapter_dir, "DPO")
+
+        if dpo_model is not None:
+            print("\n--- Generating DPO model responses ---")
+            for prompt in tqdm(prompts, desc="DPO"):
+                dpo_responses.append(generate_response(dpo_model, tokenizer, prompt))
+            del dpo_model
+            torch.cuda.empty_cache()
+        else:
+            dpo_responses = ["[DPO adapter not available]"] * len(prompts)
     else:
+        print(f"  WARNING: DPO adapter not found at {dpo_adapter_dir}, skipping")
         dpo_responses = ["[DPO adapter not available]"] * len(prompts)
 
     # Assemble results

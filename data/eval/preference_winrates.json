@@ -3,11 +3,33 @@
     "comparison": "Base vs SFT",
     "model_a": "Base",
     "model_b": "SFT",
-    "Base_wins": 54,
-    "SFT_wins": 17,
-    "errors": 1,
-    "total_judged": 71,
-    "Base_win_rate": 76.1,
-    "SFT_win_rate": 23.9
+    "Base_wins": 144,
+    "SFT_wins": 54,
+    "errors": 0,
+    "total_judged": 198,
+    "Base_win_rate": 72.7,
+    "SFT_win_rate": 27.3
+  },
+  {
+    "comparison": "SFT vs DPO",
+    "model_a": "SFT",
+    "model_b": "DPO",
+    "SFT_wins": 74,
+    "DPO_wins": 124,
+    "errors": 0,
+    "total_judged": 198,
+    "SFT_win_rate": 37.4,
+    "DPO_win_rate": 62.6
+  },
+  {
+    "comparison": "Base vs DPO",
+    "model_a": "Base",
+    "model_b": "DPO",
+    "Base_wins": 84,
+    "DPO_wins": 114,
+    "errors": 0,
+    "total_judged": 198,
+    "Base_win_rate": 42.4,
+    "DPO_win_rate": 57.6
   }
 ]
