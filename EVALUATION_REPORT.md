@@ -19,7 +19,7 @@ This report documents the evaluation of a two-stage fine-tuning pipeline (LoRA S
 |-------|-------------|
 | **Base** | Mistral 7B Instruct v0.2, 4-bit NF4 quantized, no fine-tuning |
 | **SFT** | Base + QLoRA SFT adapter (r=16, alpha=32), trained 3 epochs on 648 preference pairs |
-| **DPO** | Merged SFT + DPO adapter (beta=0.1), trained 2 epochs on same preference data |
+| **DPO** | Merged SFT + fresh DPO LoRA adapter (beta=0.3), trained 1 epoch on same preference data |
 
 ### 2.2 Test Set
 
@@ -62,10 +62,10 @@ This report documents the evaluation of a two-stage fine-tuning pipeline (LoRA S
 
 | Parameter | Value |
 |-----------|-------|
-| Base | Merged SFT model |
-| Beta | 0.1 |
-| Learning rate | 5e-7 |
-| Epochs | 2 |
+| Base | Merged SFT model + fresh LoRA adapter |
+| Beta | 0.3 |
+| Learning rate | 5e-6 |
+| Epochs | 1 |
 | Training time | ~45 minutes |
 
 ---
@@ -225,7 +225,7 @@ DPO gives the most appropriate response — acknowledging the limitation while d
 |------|----------|------|
 | RAG ingestion + preference collection | Local (CPU) | ~30 min |
 | SFT training (3 epochs) | Kaggle P100 | ~67 min |
-| DPO training (2 epochs) | Kaggle P100 | ~45 min |
+| DPO training (1 epoch) | Kaggle P100 | ~45 min |
 | Evaluation inference (198 prompts × 3 models) | Kaggle P100 | ~45 min |
 | Metrics + judge (198 × 3 pairs) | Local + OpenAI API | ~18 min |
 | **Total GPU time** | | **~2.5 hours** |
