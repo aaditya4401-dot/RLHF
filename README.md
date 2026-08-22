@@ -38,7 +38,9 @@ A self-improving HR policy question-answering system that uses a RAG pipeline (O
 
 **SFT achieves a 1.78x higher ROUGE-L** against reference HR policy answers while producing the most concise responses. **DPO** trades some ROUGE-L for preference quality and structure, with zero hallucination instances (vs. 11 for Base).
 
-GPT-4o-mini pairwise judge win rates: Base beats SFT 72.7% to 27.3% -- a known LLM-as-judge bias toward longer, more verbose responses, since the base model gives generic textbook answers while SFT gives shorter, policy-specific answers that match ground truth better (as confirmed by ROUGE-L). DPO closes this gap and reverses it, winning 62.6% over SFT and 57.6% over Base. See [EVALUATION_REPORT.md](EVALUATION_REPORT.md) for detailed analysis.
+GPT-4o-mini pairwise judge win rates: Base beats SFT 72.7% to 27.3% -- a known LLM-as-judge bias toward longer, more verbose responses, since the base model gives generic textbook answers while SFT gives shorter, policy-specific answers that match ground truth better (as confirmed by ROUGE-L). DPO closes this gap and reverses it, winning 62.6% over SFT and 57.6% over Base.
+
+> **Read these numbers as a pipeline demonstration, not a benchmark.** The evaluation set is **not prompt-disjoint** from training: the 80/20 split was applied per preference-pair rather than per prompt, so all 55 questions appear in both splits and every evaluated prompt was seen during training. ROUGE-L is the most affected — it rewards reproducing references the model trained on. Roughly 45% of reference answers are also refusals ("refer to your HR department"), so part of what SFT learned is appropriate declining rather than policy knowledge. Full analysis in [EVALUATION_REPORT.md](EVALUATION_REPORT.md), Section 9.
 
 ## Data Sources
 
@@ -63,8 +65,8 @@ GPT-4o-mini pairwise judge win rates: Base beats SFT 72.7% to 27.3% -- a known L
 │   │   ├── train.json              # 648 training pairs
 │   │   └── train.parquet
 │   └── eval/                       # Evaluation artifacts
-│       ├── test.json               # 198 held-out test prompts
-│       ├── eval_results.json       # Base + SFT responses on test set
+│       ├── test.json               # 198 test records (55 prompts, not disjoint from train)
+│       ├── eval_results.json       # Base + SFT + DPO responses on test set
 │       ├── metrics.csv             # ROUGE-L + word count stats
 │       └── preference_winrates.json
 ├── src/
@@ -185,8 +187,8 @@ python -m src.eval.compare --results data/eval/eval_results.json
 
 ## Key Findings
 
-1. **SFT works** -- 1.78x ROUGE-L improvement, model learns company-specific HR policies with concise, grounded answers
-2. **DPO refines for preference quality** -- after tuning beta to 0.3 (0.1 diverged, 0.5 was too conservative) with a fresh LoRA adapter, DPO is preferred by the LLM judge over SFT (62.6%) and Base (57.6%), with zero hallucination instances
-3. **LLM-as-judge has verbosity bias** -- GPT-4o-mini initially prefers longer, generic Base answers over shorter, policy-specific SFT ones; DPO learns the balance between the two
-4. **ROUGE-L and LLM-judge tell complementary stories** -- ROUGE-L favors SFT's factual alignment with reference text, while the judge favors DPO's perceived quality and structure
-5. **QLoRA is efficient** -- full SFT training in ~67 minutes on a 27 MB adapter; the entire SFT+DPO pipeline runs in ~2.5 GPU-hours, well within Kaggle's free 30-hour weekly budget
+1. **The pipeline runs end-to-end on free compute** -- RAG preference generation, QLoRA SFT, DPO, and evaluation in ~2.5 GPU-hours on a single Tesla P100, with a 27 MB adapter training only 0.19% of the model's 7.26B parameters. This is the claim the project best supports.
+2. **SFT shifts the model toward the reference style** -- shorter responses (131 vs 202 words), higher lexical diversity, and 1.78x ROUGE-L. Measured on seen prompts, so partly memorization (see limitations below).
+3. **LLM-as-judge has verbosity bias** -- GPT-4o-mini prefers longer, generic Base answers over shorter, policy-specific SFT ones. This finding stands independently of the split problem and was the most interesting result of the project.
+4. **DPO wins the cleanest comparison** -- preferred over SFT 62.6% of the time with zero verbose off-topic responses. Since SFT and DPO trained on identical data, neither holds a memorization advantage, making this the least contaminated number in the evaluation.
+5. **The evaluation has real limits** -- the test set is not prompt-disjoint (0 of 55 prompts held out), the corpus is small (55 unique questions), and ~45% of reference answers are refusals. Section 9 of [EVALUATION_REPORT.md](EVALUATION_REPORT.md) documents all of these and what fixing them requires.
