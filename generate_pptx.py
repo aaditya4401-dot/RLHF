@@ -1,4 +1,6 @@
 """Generate RLHF project presentation."""
+import os
+
 from pptx import Presentation
 from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
@@ -644,7 +646,7 @@ add_body_text(slide, 6.8, 1.5, 5.5, 5.5, [
 # ══════════════════════════════════════════════════════════════
 # Save
 # ══════════════════════════════════════════════════════════════
-output_path = r"RLHF_Presentation.pptx"
+output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "RLHF_Presentation.pptx")
 prs.save(output_path)
 print(f"Presentation saved to {output_path}")
 print(f"Total slides: {len(prs.slides)}")

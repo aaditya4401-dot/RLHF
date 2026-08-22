@@ -50,8 +50,8 @@ wandb/
 *.avi
 *.mov
 
-# Unrelated files
-
+# Office lock/temp files
+~$*
 
 # Results — large training artifacts
 results/sft_output/
