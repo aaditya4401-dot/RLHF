@@ -8,7 +8,17 @@
     "errors": 0,
     "total_judged": 198,
     "Base_win_rate": 72.7,
-    "SFT_win_rate": 27.3
+    "SFT_win_rate": 27.3,
+    "Base_ci_95": [
+      66.1,
+      78.5
+    ],
+    "SFT_ci_95": [
+      21.5,
+      33.9
+    ],
+    "p_value": 1.22e-10,
+    "significant_at_05": true
   },
   {
     "comparison": "SFT vs DPO",
@@ -19,7 +29,17 @@
     "errors": 0,
     "total_judged": 198,
     "SFT_win_rate": 37.4,
-    "DPO_win_rate": 62.6
+    "DPO_win_rate": 62.6,
+    "SFT_ci_95": [
+      30.9,
+      44.3
+    ],
+    "DPO_ci_95": [
+      55.7,
+      69.1
+    ],
+    "p_value": 0.000467,
+    "significant_at_05": true
   },
   {
     "comparison": "Base vs DPO",
@@ -30,6 +50,16 @@
     "errors": 0,
     "total_judged": 198,
     "Base_win_rate": 42.4,
-    "DPO_win_rate": 57.6
+    "DPO_win_rate": 57.6,
+    "Base_ci_95": [
+      35.7,
+      49.4
+    ],
+    "DPO_ci_95": [
+      50.6,
+      64.3
+    ],
+    "p_value": 0.039,
+    "significant_at_05": true
   }
 ]

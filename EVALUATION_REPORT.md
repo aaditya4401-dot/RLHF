@@ -28,7 +28,7 @@ This report documents the evaluation of a two-stage fine-tuning pipeline (LoRA S
 - **198 test records** drawn from **55 unique HR questions**, spanning performance reviews, harassment complaints, sick leave, data privacy, resignation, overtime, remote work, parental leave, and more
 - Each record has a **reference answer** (`chosen`) from the RAG pipeline, grounded in the source policy documents
 
-> **Important — the test set is not prompt-disjoint.** The 80/20 split was applied at the *preference-pair* level, not the *prompt* level. All 55 questions appear in both the training and test splits, so every evaluated prompt was seen during training. This materially affects how the metrics below should be read — see [Section 9: Limitations](#9-limitations).
+> **Important — the test set is not prompt-disjoint.** The 90/10 split was applied at the *preference-pair* level, not the *prompt* level. All 55 questions appear in both the training and test splits, so every evaluated prompt was seen during training. This materially affects how the metrics below should be read — see [Section 9: Limitations](#9-limitations).
 
 ### 2.3 Generation Settings
 
@@ -154,6 +154,18 @@ DPO has zero instances of this pattern, suggesting it learned to avoid verbose o
 | SFT vs DPO | SFT: 74 (37.4%) | DPO: 124 (62.6%) | **DPO** |
 | Base vs DPO | Base: 84 (42.4%) | DPO: 114 (57.6%) | **DPO** |
 
+**Statistical significance.** Win rates on n=198 carry roughly a ±7pp interval, so the raw percentages overstate how settled these results are. 95% Wilson score intervals and exact two-sided binomial tests against chance:
+
+| Comparison | Winner's rate | 95% CI | p (vs 50%) | Verdict |
+|------------|--------------|--------|-----------|---------|
+| Base vs SFT | Base 72.7% | [66.1, 78.5] | 1.2e-10 | Decisive |
+| SFT vs DPO | DPO 62.6% | [55.7, 69.1] | 0.00047 | Solid |
+| Base vs DPO | DPO 57.6% | [50.6, 64.3] | 0.039 | **Marginal** |
+
+All three clear the α=0.05 bar, but they are not equally strong. The Base vs DPO interval extends down to 50.6% — 0.6pp above chance — so that comparison should be treated as suggestive rather than established. The verbosity-bias result (Base vs SFT) is by far the most robust finding in this report.
+
+Reproduce with `python -m src.eval.compare --recompute` (arithmetic only, no API calls).
+
 ### 4.3 Analysis: Two Metrics, Two Stories
 
 The ROUGE-L and LLM judge metrics tell complementary stories:
@@ -264,7 +276,7 @@ These constraints materially affect how the results above should be interpreted.
 
 ### 9.1 The test set is not prompt-disjoint
 
-The 80/20 split was applied at the preference-pair level rather than the prompt level. The consequence:
+The 90/10 split was applied at the preference-pair level rather than the prompt level. The consequence:
 
 | | Unique prompts |
 |---|---|
