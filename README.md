@@ -16,7 +16,7 @@ A self-improving HR policy question-answering system that uses a RAG pipeline (O
                                                        (GPT-4o as judge)
                                                               |
                                                     [Preference Dataset]
-                                                        (648 train / 198 test)
+                                                     (1,780 train / 198 test)
                                                               |
                                         [Stage 1: QLoRA SFT on Mistral 7B]
                                                   (Kaggle P100, ~67 min)
@@ -38,9 +38,17 @@ A self-improving HR policy question-answering system that uses a RAG pipeline (O
 
 **SFT achieves a 1.78x higher ROUGE-L** against reference HR policy answers while producing the most concise responses. **DPO** trades some ROUGE-L for preference quality and structure, with zero hallucination instances (vs. 11 for Base).
 
-GPT-4o-mini pairwise judge win rates: Base beats SFT 72.7% to 27.3% -- a known LLM-as-judge bias toward longer, more verbose responses, since the base model gives generic textbook answers while SFT gives shorter, policy-specific answers that match ground truth better (as confirmed by ROUGE-L). DPO closes this gap and reverses it, winning 62.6% over SFT and 57.6% over Base.
+GPT-4o-mini pairwise judge win rates (n=198, 95% Wilson intervals):
 
-> **Read these numbers as a pipeline demonstration, not a benchmark.** The evaluation set is **not prompt-disjoint** from training: the 80/20 split was applied per preference-pair rather than per prompt, so all 55 questions appear in both splits and every evaluated prompt was seen during training. ROUGE-L is the most affected — it rewards reproducing references the model trained on. Roughly 45% of reference answers are also refusals ("refer to your HR department"), so part of what SFT learned is appropriate declining rather than policy knowledge. Full analysis in [EVALUATION_REPORT.md](EVALUATION_REPORT.md), Section 9.
+| Comparison | Win rate | 95% CI | p (vs 50%) |
+|---|---|---|---|
+| Base over SFT | 72.7% | [66.1, 78.5] | 1.2e-10 |
+| DPO over SFT | 62.6% | [55.7, 69.1] | 0.00047 |
+| DPO over Base | 57.6% | [50.6, 64.3] | 0.039 |
+
+Base beating SFT reflects a known LLM-as-judge bias toward longer, more verbose responses: the base model gives generic textbook answers while SFT gives shorter, policy-specific ones that match ground truth better (as confirmed by ROUGE-L). DPO closes that gap and reverses it. Note that **DPO over Base is only marginally significant** — its interval reaches to 50.6%, barely clear of chance — so it should be read as a weak result, not a decisive one.
+
+> **Read these numbers as a pipeline demonstration, not a benchmark.** The evaluation set is **not prompt-disjoint** from training: the 90/10 split was applied per preference-pair rather than per prompt, so all 55 questions appear in both splits and every evaluated prompt was seen during training. ROUGE-L is the most affected — it rewards reproducing references the model trained on. Roughly 45% of reference answers are also refusals ("refer to your HR department"), so part of what SFT learned is appropriate declining rather than policy knowledge. Full analysis in [EVALUATION_REPORT.md](EVALUATION_REPORT.md), Section 9.
 
 ## Data Sources
 
@@ -60,9 +68,9 @@ GPT-4o-mini pairwise judge win rates: Base beats SFT 72.7% to 27.3% -- a known L
 │   │   └── handbooks/              # GitLab sections + Valve PDF
 │   ├── chroma_db/                  # ChromaDB vector store
 │   ├── preference_data/            # Preference pairs + HF Dataset
-│   │   ├── candidates.json         # 9 candidates per query
-│   │   ├── judgments.json          # GPT-4o judge verdicts
-│   │   ├── train.json              # 648 training pairs
+│   │   ├── candidates.json         # 9 candidates per query (55 queries)
+│   │   ├── judgments.json          # 1,978 GPT-4o judge verdicts
+│   │   ├── train.json              # 1,780 training pairs
 │   │   └── train.parquet
 │   └── eval/                       # Evaluation artifacts
 │       ├── test.json               # 198 test records (55 prompts, not disjoint from train)
@@ -125,10 +133,10 @@ cp .env.example .env
 # Build vector store from HR documents
 python -m src.rag.ingest
 
-# Generate 9 candidate responses per query (20 queries)
+# Generate 9 candidate responses per query (55 queries)
 python -m src.preference.collect
 
-# Judge response pairs with GPT-4o
+# Judge all 36 pairs per query with GPT-4o, keeping confidence >= 4/5
 python -m src.preference.judge
 
 # Format into HF Datasets (90/10 train/test split)
@@ -137,7 +145,13 @@ python -m src.preference.format
 
 ### Stage 2: QLoRA SFT Training (Kaggle GPU)
 
-Upload `data/preference_data/train.json` and `data/eval/test.json` to Kaggle, then run `notebooks/kaggle_sft.ipynb`.
+Upload `data/preference_data/train.json` and `data/eval/test.json` to Kaggle, then run `notebooks/kaggle_sft.ipynb`. The same logic is available as a script for any GPU box:
+
+```bash
+python -m src.training.sft_lora \
+    --dataset data/preference_data/train.json \
+    --adapter-dir models/sft_adapter
+```
 
 - Base model: Mistral 7B Instruct v0.2
 - Quantization: 4-bit NF4 with double quantization
@@ -146,9 +160,24 @@ Upload `data/preference_data/train.json` and `data/eval/test.json` to Kaggle, th
 - Time: ~67 minutes on Tesla P100 (123 steps)
 - Output: ~27 MB LoRA adapter
 
+> **Adapter provenance:** the shipped adapters were trained on an earlier
+> 648-pair version of the dataset (123 steps at an effective batch of 16
+> confirms this). The preference set was later regenerated to 1,780 pairs and
+> the models were *not* retrained. Rerunning training on the current
+> `train.json` will not reproduce the exact adapters in `models/`.
+
 ### Stage 3: DPO Training (Kaggle GPU)
 
-Run `notebooks/kaggle_dpo.ipynb` using the merged SFT model as the base, with a fresh LoRA adapter trained for DPO (not reusing the SFT adapter directly).
+Run `notebooks/kaggle_dpo.ipynb` using the merged SFT model as the base, with a fresh LoRA adapter trained for DPO (not reusing the SFT adapter directly). Script equivalent:
+
+```bash
+python -m src.training.dpo_train \
+    --dataset data/preference_data/train.json \
+    --sft-adapter models/sft_adapter \
+    --adapter-dir models/dpo_adapter
+```
+
+The SFT adapter is merged into the base weights first, then a fresh LoRA is added and `ref_model=None` lets TRL derive the reference policy by disabling that adapter — so DPO gets both policies from one set of 7B weights instead of two. That is what makes it fit in 16 GB.
 
 - DPO beta: 0.3 (0.1 caused divergence, 0.5 was too conservative)
 - Learning rate: 5e-6
@@ -166,8 +195,11 @@ DPO is preferred by the GPT-4o-mini judge over both SFT (62.6%) and Base (57.6%)
 # Local: compute ROUGE-L metrics
 python -m src.eval.metrics --results data/eval/eval_results.json --references data/eval/test.json
 
-# Local: GPT-4o pairwise preference judging
+# Local: GPT-4o pairwise preference judging (reports 95% Wilson CIs + binomial test)
 python -m src.eval.compare --results data/eval/eval_results.json
+
+# Re-derive CIs and p-values from existing judgments — no API calls
+python -m src.eval.compare --recompute
 ```
 
 ## Tech Stack
